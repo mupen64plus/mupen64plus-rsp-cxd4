@@ -167,8 +167,22 @@ ifeq ($(ARCH_DETECTED), 64BITS_32)
   ifeq ($(OS), FREEBSD)
     $(error Do not use the BITS=32 option with FreeBSD, use -m32 and -m elf_i386)
   endif
-  CFLAGS += -m32
-  LDFLAGS += -m32 -Wl,-m,elf_i386
+  ifneq ($(OS), OSX)
+    ifeq ($(OS), MINGW)
+      CFLAGS += -march=i686
+      LDFLAGS += -Wl,-m,i386pe
+    else
+      CFLAGS += -m32
+      LDFLAGS += -Wl,-m,elf_i386
+    endif
+  endif
+endif
+
+ifeq ($(ARCH_DETECTED), 64BITS)
+  ifeq ($(OS), MINGW)
+    CFLAGS += -march=x86-64
+    LDFLAGS += -Wl,-m,i386pep
+  endif
 endif
 
 # set special flags per-system
@@ -285,11 +299,11 @@ TARGET = mupen64plus-rsp-cxd4$(POSTFIX).$(SO_EXTENSION)
 targets:
 	@echo "Mupen64Plus-rsp-cxd4 makefile. "
 	@echo "  Targets:"
-	@echo "    all           == Build Mupen64Plus rsp-hle plugin"
+	@echo "    all           == Build Mupen64Plus rsp-cxd4 plugin"
 	@echo "    clean         == remove object files"
 	@echo "    rebuild       == clean and re-build all"
-	@echo "    install       == Install Mupen64Plus rsp-hle plugin"
-	@echo "    uninstall     == Uninstall Mupen64Plus rsp-hle plugin"
+	@echo "    install       == Install Mupen64Plus rsp-cxd4 plugin"
+	@echo "    uninstall     == Uninstall Mupen64Plus rsp-cxd4 plugin"
 	@echo "  Options:"
 	@echo "    BITS=32       == build 32-bit binaries on 64-bit machine"
 	@echo "    APIDIR=path   == path to find Mupen64Plus Core headers"
@@ -320,7 +334,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(PLUGINDIR)/$(TARGET)"
 
 clean:
-	$(RM) -r $(OBJDIR) $(TARGET)
+	$(RM) -r _obj _obj-sse2 $(OBJDIR) mupen64plus-rsp-cxd4*.$(SO_EXTENSION) $(TARGET)
 
 rebuild: clean all
 
