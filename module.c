@@ -412,7 +412,6 @@ EXPORT unsigned int CALL DoRspCycles(unsigned int cycles)
             GET_RCP_REG(MI_INTR_REG) |= 0x00000001;
             GET_RSP_INFO(CheckInterrupts)();
         }
-        GET_RCP_REG(DPC_STATUS_REG) &= ~0x00000002ul; /* DPC_STATUS_FREEZE */
         return 0;
     case M_AUDTASK:
         if (CFG_HLE_AUD == 0)
