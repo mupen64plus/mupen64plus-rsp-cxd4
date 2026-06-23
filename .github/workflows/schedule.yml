@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-24.04
     if: github.repository == 'mupen64plus/mupen64plus-rsp-cxd4'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Get build dependencies and arrange the environment
         run: |
           git clone --depth 1 https://github.com/mupen64plus/mupen64plus-core.git ../mupen64plus-core
@@ -33,12 +33,12 @@ jobs:
           export PATH="$(pwd)/../mupen64plus-core/.github/workflows/scripts:${PATH}"
           export CONFIG_OVERRIDE="SSE="SSE2""
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
-          export OPTFLAGS="-O3 -flto"
+          export OPTFLAGS="-O3"
           export CONFIG_OVERRIDE="SSE="none""
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }} makepkg
       - name: Upload artifact
         if: matrix.cc == 'GCC'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.PKG_NAME }}
           path: pkg/*.tar.gz
@@ -65,13 +65,13 @@ jobs:
             cross: clang-x86_64
             env: CLANG64
     name: Windows ${{ matrix.arch }} / MSYS2 ${{ matrix.env }} ${{ matrix.cc }}
-    runs-on: windows-2025
+    runs-on: windows-latest
     if: github.repository == 'mupen64plus/mupen64plus-rsp-cxd4'
     defaults:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.env }}
@@ -88,14 +88,14 @@ jobs:
           export PATH="$(pwd)/../mupen64plus-core/.github/workflows/scripts:${PATH}"
           export CONFIG_OVERRIDE="SSE="SSE2""
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
-          export OPTFLAGS="-O3 -flto"
+          export OPTFLAGS="-O3"
           export CONFIG_OVERRIDE="SSE="none""
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
       - name: Backup dependencies, etc...
         run: |
           ./../mupen64plus-core/.github/workflows/scripts/ci_backup_mingw_deps.sh ${{ matrix.env }}
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.PKG_NAME }}
           path: pkg/*
@@ -107,17 +107,18 @@ jobs:
         include:
           - toolset: v143
             arch: x64
+            wim: windows-latest
           - toolset: v141_xp
             arch: x86
+            wim: windows-2022
     name: Windows ${{ matrix.arch }} / MSVC with ${{ matrix.toolset }}
-    runs-on: windows-2025
+    runs-on: ${{ matrix.wim }}
     if: github.repository == 'mupen64plus/mupen64plus-rsp-cxd4'
     defaults:
       run:
         shell: cmd
     steps:
-      - uses: actions/checkout@v6
-      - uses: microsoft/setup-msbuild@v2
+      - uses: actions/checkout@v7
       - name: Pre-build arrangements for ${{ matrix.toolset }}
         if: matrix.toolset == 'v141_xp'
         run: |
@@ -131,7 +132,7 @@ jobs:
         run: |
           .\..\mupen64plus-core\.github\workflows\scripts\ci_backup_msvc_deps.cmd ${{ matrix.arch }}
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.PKG_NAME }}
           path: pkg/*
@@ -141,9 +142,9 @@ jobs:
     if: github.ref_name == 'master'
     needs: [Linux, MSYS2, MSVC]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Download artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: binaries
       - name: Get some tools
