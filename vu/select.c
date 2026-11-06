@@ -327,6 +327,8 @@ INLINE static void do_cr(pi16 VD, pi16 VS, pi16 VT)
 #endif
     for (i = 0; i < N; i++)
         VC[i] ^= sn[i]; /* if (sn == ~0) {VT = ~VT;} else {VT =  VT;} */
+    for (i = 0; i < N; i++)
+        sn[i] = (u16)(sn[i]) >> 15; /* ~0 to 1, 0 to 0 (as do_ch does) */
     merge(cmp, sn, le, ge);
     merge(VACC_L, cmp, VC, VS);
     vector_copy(VD, VACC_L);
