@@ -278,9 +278,7 @@ INLINE static void do_ch(pi16 VD, pi16 VS, pi16 VT)
         sn[i] = (u16)(sn[i]) >> 15; /* ~0 to 1, 0 to 0 */
 
     for (i = 0; i < N; i++)
-        diff[i] = VC[i] - VS[i];
-    for (i = 0; i < N; i++)
-        diff[i] = (diff[i] >= 0);
+        diff[i] = (VC[i] >= VS[i]); /* VC - VS overflows i16 at VS = -32768 */
     for (i = 0; i < N; i++)
         le[i] = (VT[i] < 0);
     merge(le, sn, diff, le);
