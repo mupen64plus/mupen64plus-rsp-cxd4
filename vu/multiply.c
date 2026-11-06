@@ -60,7 +60,7 @@ static INLINE void UNSIGNED_CLAMP(pi16 VD)
 
     SIGNED_CLAMP_AM(temp); /* no direct map in SSE, but closely based on this */
     for (i = 0; i < N; i++)
-        cond[i] = -(temp[i] >  VACC_M[i]); /* VD |= -(ACC47..16 > +32767) */
+        cond[i] = -((VACC_H[i] > 0) | ((VACC_H[i] == 0) & (VACC_M[i] < 0))); /* VD |= -(ACC47..16 > +32767) */
     for (i = 0; i < N; i++)
         VD[i] = temp[i] & ~(temp[i] >> 15); /* Only this clamp is unsigned. */
     for (i = 0; i < N; i++)
@@ -75,7 +75,7 @@ static INLINE void SIGNED_CLAMP_AL(pi16 VD)
 
     SIGNED_CLAMP_AM(temp); /* no direct map in SSE, but closely based on this */
     for (i = 0; i < N; i++)
-        cond[i] = (temp[i] != VACC_M[i]); /* result_clamped != result_raw ? */
+        cond[i] = (VACC_H[i] != -(VACC_M[i] < 0)); /* ACC47..16 outside the 16-bit range? */
     for (i = 0; i < N; i++)
         temp[i] ^= 0x8000; /* clamps 0x0000:0xFFFF instead of -0x8000:+0x7FFF */
     for (i = 0; i < N; i++)
@@ -460,7 +460,9 @@ VECTOR_OPERATION VMACU(v16 vs, v16 vt)
     vt = _mm_unpackhi_epi16(acc_md, acc_hi);
     vs = _mm_unpacklo_epi16(acc_md, acc_hi);
     vs = _mm_packs_epi32(vs, vt);
-    overflow = _mm_cmplt_epi16(acc_md, vs);
+    overflow = _mm_cmpeq_epi16(acc_hi, _mm_setzero_si128()); /* HI == 0 ... */
+    overflow = _mm_and_si128(overflow, _mm_srai_epi16(acc_md, 15)); /* ... and MD >= 0x8000 */
+    overflow = _mm_or_si128(overflow, _mm_cmpgt_epi16(acc_hi, _mm_setzero_si128())); /* or HI > 0 */
     vs = _mm_andnot_si128(_mm_srai_epi16(vs, 15), vs);
     return _mm_or_si128(vs, overflow);
 #else
@@ -531,7 +533,7 @@ VECTOR_OPERATION VMADL(v16 vs, v16 vt)
     vs = _mm_unpacklo_epi16(acc_md, acc_hi);
     vs = _mm_packs_epi32(vs, vt);
 
-    acc_md = _mm_cmpeq_epi16(acc_md, vs); /* (unclamped == clamped) ... */
+    acc_md = _mm_cmpeq_epi16(acc_hi, _mm_srai_epi16(acc_md, 15)); /* ACC47..16 fits in 16 bits ... */
     acc_lo = _mm_and_si128(acc_lo, acc_md); /* ... ? low : mid */
     vt = _mm_cmpeq_epi16(vt, vt);
     acc_md = _mm_xor_si128(acc_md, vt); /* (unclamped != clamped) ... */
