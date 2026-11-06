@@ -673,7 +673,7 @@ VECTOR_OPERATION VMADN(v16 vs, v16 vt)
     vs = _mm_unpacklo_epi16(acc_md, acc_hi);
     vs = _mm_packs_epi32(vs, vt);
 
-    acc_md = _mm_cmpeq_epi16(acc_md, vs); /* (unclamped == clamped) ... */
+    acc_md = _mm_cmpeq_epi16(acc_hi, _mm_srai_epi16(acc_md, 15)); /* ACC47..16 fits in 16 bits ... */
     acc_lo = _mm_and_si128(acc_lo, acc_md); /* ... ? low : mid */
     vt = _mm_cmpeq_epi16(vt, vt);
     acc_md = _mm_xor_si128(acc_md, vt); /* (unclamped != clamped) ... */
