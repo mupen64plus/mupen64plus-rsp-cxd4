@@ -540,6 +540,8 @@ VECTOR_OPERATION VMRG(v16 vs, v16 vt)
     VT = vt;
 #endif
     do_mrg(VD, VS, VT);
+    vector_wipe(cf_ne);
+    vector_wipe(cf_co);
 #ifdef ARCH_MIN_SSE2
     COMPILER_FENCE();
     vs = *(v16 *)VD;
