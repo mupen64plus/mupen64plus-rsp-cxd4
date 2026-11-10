@@ -151,7 +151,7 @@ INLINE static void clr_bi(pi16 VD, pi16 VS, pi16 VT)
 INLINE static void do_abs(pi16 VD, pi16 VS, pi16 VT)
 {
     i16 neg[N], pos[N];
-    i16 nez[N], cch[N]; /* corner case hack -- abs(-32768) == +32767 */
+    i16 nez[N], cch[N]; /* vs < 0, vt = -32768: VD +32767, ACC -32768 */
     ALIGNED i16 res[N];
     register unsigned int i;
 
@@ -173,10 +173,10 @@ INLINE static void do_abs(pi16 VD, pi16 VS, pi16 VT)
 
     for (i = 0; i < N; i++)
         res[i] *= nez[i];
-    for (i = 0; i < N; i++)
-        res[i] -= cch[i];
     vector_copy(VACC_L, res);
-    vector_copy(VD, VACC_L);
+    for (i = 0; i < N; i++)
+        res[i] -= cch[i] & neg[i];
+    vector_copy(VD, res);
     return;
 }
 
