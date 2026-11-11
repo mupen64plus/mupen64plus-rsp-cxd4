@@ -251,10 +251,10 @@ INLINE static void do_ch(pi16 VD, pi16 VS, pi16 VT)
  * Note that if (VT == INT16_MIN) a.k.a. cch[i], -(-32768) is undefined.
  */
     for (i = 0; i < N; i++)
-        VC[i] -= sn[i] & ~cch[i]; /* cch[i] causes -(-32768) to stay ~-32768. */
+        VC[i] -= sn[i] & ~cch[i]; /* cch[i]:  -(-32768) stays +32767 for le. */
 
     for (i = 0; i < N; i++)
-        eq[i]  = (VS[i] == VC[i]) & ~cch[i]; /* VS = -(-32768) never happens. */
+        eq[i]  = (VS[i] == VC[i]); /* cch[i] & sn[i]:  VCE covers VS = +32767 */
     for (i = 0; i < N; i++)
         eq[i] |= cf_vce[i];
 
@@ -283,6 +283,9 @@ INLINE static void do_ch(pi16 VD, pi16 VS, pi16 VT)
         le[i] = (VT[i] < 0);
     merge(le, sn, diff, le);
 #endif
+
+    for (i = 0; i < N; i++)
+        VC[i] ^= (VC[i] ^ VT[i]) & cch[i]; /* VD:  -(-32768) wraps to -32768. */
 
     merge(cf_comp, sn, le, ge);
     merge(VACC_L, cf_comp, VC, VS);
